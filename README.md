@@ -3,7 +3,7 @@
 
 Stripped down example of a GraphQL gateway using GraphQL components (partials).
 
-Resolvers are backed by seneca microservices.
+Resolvers are backed by moleculer microservices.
 
 ### Run
 
