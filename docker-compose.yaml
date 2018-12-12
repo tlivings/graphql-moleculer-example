@@ -12,6 +12,9 @@ gateway:
         - "4000:4000"
     links: 
         - nats:nats-server
+    environment:
+        - DEBUG=graphql:*
+        # - GRAPHQL_DEBUG=1
 author:
     build: ./author
     links: 

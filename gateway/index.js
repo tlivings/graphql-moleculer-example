@@ -1,7 +1,9 @@
 
 const { ApolloServer } = require('apollo-server');
-const Merge = require('./lib/merge');
 const { ServiceBroker } = require("moleculer");
+const { mergeComponentSchemas } = require('./lib/merge_components');
+
+const { schema } = mergeComponentSchemas([require('./components/author'), require('./components/book')]);
 
 const broker = new ServiceBroker({
     nodeID: 'node-gateway',
@@ -11,7 +13,7 @@ const broker = new ServiceBroker({
 });
 
 const server = new ApolloServer({
-    schema: Merge([require('./partials/author'), require('./partials/book')]),
+    schema,
     context: async (request) => {
         return { call: broker.call.bind(broker), request };
     }
