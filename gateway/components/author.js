@@ -1,5 +1,5 @@
 
-const GraphQLComponent = require('../lib/component');
+const GraphQLComponent = require('graphql-component');
 
 const types = `
     # An author.
@@ -10,12 +10,9 @@ const types = `
         # The author email.
         email: String
     }
-`;
-
-const rootTypes = `
     type Query {
-        # Seach for an author by id.
-        author(id: ID!, version: String) : Author
+      # Seach for an author by id.
+      author(id: ID!, version: String) : Author
     }
     type Mutation {
         # Create a new book.
@@ -25,23 +22,23 @@ const rootTypes = `
 
 const resolvers = {
   Query: {
-      author(_, { id }, { call }) {
-          return call('author.query', { id });
-      }
+    author(_, { id }, { call }) {
+      return this._broker.call('author.query', { id });
+    }
   },
   Mutation: {
-      author(_, { name }, { call }) {
-          return call('author.mutate', { name });
-      }
-  }
-};
-
-const fixtures = {
-  Query: {
-    async author() {
-      return { id: 'an id', name: 'Test Author' };
+    author(_, { name }, { call }) {
+      return this._broker.call('author.mutate', { name });
     }
   }
 };
 
-module.exports = new GraphQLComponent({ types, rootTypes, resolvers, fixtures });
+class AuthorComponent extends GraphQLComponent {
+  constructor({ broker }) {
+    super({ types, resolvers });
+
+    this._broker = broker;
+  }
+}
+
+module.exports = AuthorComponent;

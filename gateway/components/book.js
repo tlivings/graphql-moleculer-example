@@ -1,6 +1,6 @@
 
 const Author = require('./author');
-const GraphQLComponent = require('../lib/component');
+const GraphQLComponent = require('graphql-component');
 
 const types = `
     # This is a book.
@@ -11,12 +11,9 @@ const types = `
         # The book's author.
         author: Author
     }
-`;
-
-const rootTypes = `
     type Query {
-        # Search for a book by id.
-        book(id: ID!) : Book
+      # Search for a book by id.
+      book(id: ID!) : Book
     }
     type Mutation {
         # Create a new book.
@@ -27,27 +24,37 @@ const rootTypes = `
 const resolvers = {
   Query: {
     book(_, { id }, { call }) {
-        return call('book.query', { id });
+        return this._broker.call('book.query', { id });
     }
   },
   Mutation: {
       book(_, { name, author_id }, { call }) {
-          return call('book.mutate', { name, author_id });
+          return this._broker.call('book.mutate', { name, author_id });
       }
   },
   Book: {
-    author(book, args, context, info) {
-      return Author.bindings.query.author({ id: book.author_id }, info, { context });
+    async author(book, args, context, info) {
+      
+      const { data, errors } = await this._authorComponent.execute(`query { author(id: "${book.author_id}") { ...AllAuthor }}`, context);
+
+      if (errors) {
+        throw errors[0];
+      }
+    
+      return data.author;
     }
   }
 };
 
-const fixtures = {
-  Query: {
-    book() {
-      return { id: 'an id', name: 'Test Book', author_id: 'author id' };
-    }
-  }
-};
+class BookComponent extends GraphQLComponent {
+  constructor({ broker }) {
+    const authorComponent = new Author({ broker });
 
-module.exports = new GraphQLComponent({ types, rootTypes, resolvers, imports: [Author], fixtures });
+    super({ types, resolvers, imports: [ authorComponent ] });
+    
+    this._broker = broker;
+    this._authorComponent = authorComponent;
+  }
+}
+
+module.exports = BookComponent;
